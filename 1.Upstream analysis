@@ -84,7 +84,44 @@ bash generateDecoyTranscriptome.sh -j 12 -b /bedtools/path -m /mashmap/path \
 # constrcuct the index
 salmon index -t gencode.vM28.transcripts.fa.gz --decoys decoy_file/decoys.txt -p 16 -i salmon_index_particial_decoy -k 31 --gencode
 
+#quantifying the batches of sample
 
+mkdir /home/shpc_100393/rna_seq/4.quant
+#!/bin/bash
+for id in ...
+
+do
+echo "Processing sample ${id}"
+salmon quant -i salmon_index_particial_decoy -l A \
+         -1 /home/shpc_100393/rna_seq/1.raw.data/${id}_1.fastq.gz \
+         -2 /home/shpc_100393/rna_seq/1.raw.data/${id}_2.fastq.gz \
+         -p 16 --validateMappings -o /home/shpc_100393/rna_seq/4.quant/${id}_quant
+         
+done 
+
+# merge all the transcripts level into one file
+mkdir /home/shpc_100393/rna_seq/4.quant/4.quant.merge
+cd /home/shpc_100393/rna_seq/4.quant/4.quant.merge
+
+salmon quantmerge \
+--quants {...} \
+--names {...} \ 
+--coloum=tpm  \
+-o /home/shpc_100393/rna_seq/4.quant/4.quant.merge/merge_tpm.txt
+
+library(DESeq2)
+library("tximport")
+library("readr")
+tx2gene <- read_csv("trans2gene.csv")
+samples <- data.frame(run = c('T11', 'T12', 'T13', 'T21', 'T22', 'T23'), condition = c("T1","T1","T1","T2","T2","T2"))
+files <- file.path('.', paste(substring(samples$run, 1,3),".sf", sep = "")) # set salmon result files, each sample names plus '.sf'
+names(files) <- samples$run
+txi <- tximport(files, type="salmon", tx2gene=tx2gene)
+head(txi$counts)
+dds <- DESeqDataSetFromTximport(txi, colData=samples, design= ~ condition)
+dds <- DESeq(dds)
+res <- results(dds)
+write.table(res,"T1_2.csv", sep = ",", row.names = TRUE)
 
 
 
