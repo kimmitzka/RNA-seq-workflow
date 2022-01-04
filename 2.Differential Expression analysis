@@ -1,1 +1,43 @@
-# After we get the transcripts quantification from Salmon, we have to import the results into tximpoet and convert it to gene-level expression
+# After we get the transcripts quantification from Salmon, we have to import the transcript-level estimates into tximpoet and convert it to gene-level expression
+# library packages we need
+
+library(GenomicFeatures, quietly = T)
+library(tximport, quietly = T)
+library(DESeq2)
+
+# locate metafile and salmon files 
+dir <- ("./metadata/path")
+metadata <- read.table(file.path(dir, "METADATA.txt"), header = TRUE)
+filelist <- file.path('/home/shpc_100393/rna_seq/4.quant","salmon", metadata$sample, "quant.sf")
+
+#prepare the tx2gene file which includes the transcript IDs in the first column and gene IDs in the second coloumn 
+
+library(AnnotationDbi)
+txdb <- makeTxDbFromGFF(file = "/gencode.vM28.annotation.gtf.gz", format= "gtf")
+k <- keys(txdb, keytype = "TXNAME")
+tx2gene <- select(txdb, k, "GENEID", "TXNAME")
+head(tx2gene)
+
+# import the tx2gene and salmon files into tximport and summrize the transcript estimates into gene-level
+
+txi <- tximport(filelist, type = "salmon", tx2gene = tx2gene)
+
+# import the tximpoet matrices into DESeq2 package
+# make a work directory for DE analysis
+mkdir /home/shpc_100393/rna_seq/5.DE
+cd /home/shpc_100393/rna_seq/5.DE
+
+# construct the gene construction matrix
+colData <- data.frame(
+
+
+
+
+
+
+
+
+
+txi <- tximport (filelist, type = "salmon", tx2gene = txTogene)
+
+sample
