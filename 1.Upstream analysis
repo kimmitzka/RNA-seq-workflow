@@ -109,20 +109,6 @@ salmon quantmerge \
 --coloum=tpm  \
 -o /home/shpc_100393/rna_seq/4.quant/4.quant.merge/merge_tpm.txt
 
-library(DESeq2)
-library("tximport")
-library("readr")
-tx2gene <- read_csv("trans2gene.csv")
-samples <- data.frame(run = c('T11', 'T12', 'T13', 'T21', 'T22', 'T23'), condition = c("T1","T1","T1","T2","T2","T2"))
-files <- file.path('.', paste(substring(samples$run, 1,3),".sf", sep = "")) # set salmon result files, each sample names plus '.sf'
-names(files) <- samples$run
-txi <- tximport(files, type="salmon", tx2gene=tx2gene)
-head(txi$counts)
-dds <- DESeqDataSetFromTximport(txi, colData=samples, design= ~ condition)
-dds <- DESeq(dds)
-res <- results(dds)
-write.table(res,"T1_2.csv", sep = ",", row.names = TRUE)
-
 
 
 
