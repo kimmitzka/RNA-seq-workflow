@@ -1,0 +1,1 @@
+# After we get the transcripts quantification from Salmon, we have to import the results into tximpoet and convert it to gene-level expression
