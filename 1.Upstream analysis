@@ -30,16 +30,16 @@ mkdir /home/shpc_100393/rna_seq/2.trim.data
 
 vim cutadapt_batch.sh
 #!/bin/bash
-for id in DL_1  DL_2 DL_3 DN_1 DN_2 DN_3 M31_SL_C M31_UL_A M31_UL_B M31_UL_C M31_UL_D M31_UN_A M31_UN_B M31_UN_C M31_UN_D 
-do 
-    cutadapt -a AGATCGGAAGAGC -A AGATCGGAAGAGC -j 9 -e 0.1 -m 20 -q 10 
-    -o /3.trim.data/${id}.trimmed_1_fastq.gz\
-    -p /3.trim.data/${id}.trimmed_2_fastq.gz\
-    /1.raw.data/${id}_1.fastq.gz /1.raw.data/${id}_2.fastq.gz 
-    echo "this is sample ${id} step"
-    done
-    
-nohup ./cutadapt_batch.sh &
+for id in MON1 MON2 MON3 MOL1 MOL2 MOL4 M31UNA M31UNB M31UNC M31UND M31ULA M31ULB M31ULC M31ULD M31SLC DN1 DN2 DN3 DL1 DL2 DL3
+do
+        cutadapt -a AGATCGAAGAGC -A AGATCGGAAGAGC -j 9 -e 0.1 -m 20 -q 10 \
+                -o ../2.trim.data/${id}.trimmed_1_fastq.gz \
+                -p ../2.trim.data/${id}.trimmed_2_fastq.gz ./${id}_1.fastq.gz ./${id}_2.fastq.gz
+                echo "this is sample ${id} step"
+        done
+
+chmod +x /cut.sh
+nohup ./cut.sh &
 
 # Afther this step has been done, we can rerun fastqc to check the adaptor trimming results
 
@@ -73,32 +73,43 @@ gunzip gencode.vM28.transcripts.fa.gz
 which bedtools
 which mashmap
 
-# get the decoy file
-bash generateDecoyTranscriptome.sh -j 12 -b /bedtools/path -m /mashmap/path \
-  -a gencode.vM28.annotation.gtf.gz \
-  -g GRCm39.primary_assembly.genome.fa.gz \
-  -t gencode.vM28.transcripts.fa.gz \
-  -o decoy_file
+# get the decoy file 
+
+bash generateDecoyTranscriptome.sh \
+    -j 12 \
+    -b /home/shpc_100393/miniconda3/bin/bedtools \
+    -m /home/shpc_100393/miniconda3/bin/mashmap \
+    -a gencode.vM28.annotation.gtf \
+    -g GRCm39.primary_assembly.genome.fa \
+    -t gencode.vM28.transcripts.fa \
+    -o decoy_file
 
 
-# constrcuct the index
-salmon index -t gencode.vM28.transcripts.fa.gz --decoys decoy_file/decoys.txt -p 16 -i salmon_index_particial_decoy -k 31 --gencode
+# constrcuct the index (using a version=1.0.0 salmon here)
+/home/shpc_100393/rna_seq/3.salmon/version/salmon-latest_linux_x86_64/bin/salmon index \ 
+-t gencode.vM28.transcripts.fa \
+--decoys decoy_file/decoys.txt \
+-p 16 -i salmon_index_particial_decoy \
+-k 31 --gencode
+
 
 #quantifying the batches of sample
 
 mkdir /home/shpc_100393/rna_seq/4.quant
+
 #!/bin/bash
-for id in ...
+for id in DL1 DL2
 
 do
 echo "Processing sample ${id}"
-salmon quant -i salmon_index_particial_decoy -l A \
-         -1 /home/shpc_100393/rna_seq/1.raw.data/${id}_1.fastq.gz \
-         -2 /home/shpc_100393/rna_seq/1.raw.data/${id}_2.fastq.gz \
-         -p 16 --validateMappings -o /home/shpc_100393/rna_seq/4.quant/${id}_quant
+../3.salmon/version/salmon-latest_linux_x86_64/bin/salmon quant -i ../3.salmon/salmon_index_particial_decoy -l A \
+         -1 ./${id}.trimmed_1_fastq.gz \
+         -2 ./${id}.trimmed_2_fastq.gz \
+         -p 16 --validateMappings -o ../4.quant/${id}_quant
          
 done 
 
+chmod +x ./quant.sh
 # merge all the transcripts level into one file
 mkdir /home/shpc_100393/rna_seq/4.quant/4.quant.merge
 cd /home/shpc_100393/rna_seq/4.quant/4.quant.merge
