@@ -38,7 +38,7 @@ do
                 echo "this is sample ${id} step"
         done
 
-chmod +x /cut.sh
+chmod +x ./cut.sh
 nohup ./cut.sh &
 
 # Afther this step has been done, we can rerun fastqc to check the adaptor trimming results
